@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
-from typing import TYPE_CHECKING, AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterable
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from sqlalchemy import Connection, text
@@ -13,6 +13,21 @@ if TYPE_CHECKING:
     from alembic import config
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    group = parser.getgroup("sqlalchemy-pytest")
+    group.addoption(
+        "--reuse-db",
+        dest="reuse_db",
+        action="store_true",
+        default=False,
+    )
+
+
+@pytest.fixture(scope="session")
+def reuse_db(request: pytest.FixtureRequest) -> bool:
+    return cast(bool, request.config.getvalue("reuse_db"))
+
+
 @pytest.fixture(scope="session")
 def sqlalchemy_pytest_database_url(database_url: str, worker_id: str) -> str:
     return f"{database_url}-{worker_id}"
@@ -22,6 +37,7 @@ def sqlalchemy_pytest_database_url(database_url: str, worker_id: str) -> str:
 async def _sqlalchemy_create_database(
     database_url: str,
     sqlalchemy_pytest_database_url: str,
+    reuse_db: bool,  # noqa: FBT001
 ) -> AsyncIterable[None]:
     database_name = sqlalchemy_pytest_database_url.rsplit("/")[-1]
     engine = create_async_engine(
@@ -30,7 +46,9 @@ async def _sqlalchemy_create_database(
     )
     async with engine.connect() as conn:
         exists = await conn.scalar(
-            text(f"SELECT 1 FROM pg_database WHERE datname='{database_name}'"),
+            text(
+                f"SELECT 1 FROM pg_database WHERE datname='{database_name}'",  # noqa: S608
+            ),
         )
         if not exists:
             await conn.execute(text(f'create database "{database_name}";'))
@@ -38,6 +56,9 @@ async def _sqlalchemy_create_database(
     yield
 
     async with engine.connect() as conn:
+        if reuse_db:
+            return
+
         await conn.execute(
             text(
                 f"""
@@ -45,7 +66,7 @@ async def _sqlalchemy_create_database(
                 from pg_stat_activity
                 where pg_stat_activity.datname = '{database_name}'
                 and pid <> pg_backend_pid();
-                """,
+                """,  # noqa: S608
             ),
         )
         await conn.execute(text(f'drop database "{database_name}";'))
