@@ -1,6 +1,6 @@
 [project]
 name = "sqlalchemy-pytest"
-version = "0.0.2"
+version = "0.1.0"
 description = ""
 authors = [
     {name = "Doctor", email = "thirvondukr@gmail.com"},
@@ -39,7 +39,7 @@ concurrency = ["greenlet"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.2"
+version = "0.1.0"
 tag_format = "$version"
 version_files = [
     "sqlalchemy_pytest/__init__.py",
