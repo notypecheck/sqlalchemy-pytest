@@ -3,7 +3,7 @@ __pycache__
 
 .coverage
 coverage.xml
-.pdm.toml
+.pdm-python
 
 .env
 dist
