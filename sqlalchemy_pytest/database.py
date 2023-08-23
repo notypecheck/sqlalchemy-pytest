@@ -106,7 +106,7 @@ async def _sqlalchemy_run_migrations(
         await conn.commit()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def session(
     _sqlalchemy_run_migrations: None,
     sqlalchemy_pytest_engine: AsyncEngine,
