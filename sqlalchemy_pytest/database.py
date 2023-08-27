@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 from typing import TYPE_CHECKING, cast
 
 import pytest
@@ -73,7 +73,9 @@ async def _sqlalchemy_create_database(
 
 
 @pytest.fixture(scope="session")
-async def sqlalchemy_pytest_engine(sqlalchemy_pytest_database_url: str) -> AsyncEngine:
+async def sqlalchemy_pytest_engine(
+    sqlalchemy_pytest_database_url: str,
+) -> AsyncIterator[AsyncEngine]:
     engine = create_async_engine(sqlalchemy_pytest_database_url)
     yield engine
     await engine.dispose()
