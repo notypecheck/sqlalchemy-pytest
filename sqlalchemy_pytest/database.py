@@ -73,8 +73,10 @@ async def _sqlalchemy_create_database(
 
 
 @pytest.fixture(scope="session")
-def sqlalchemy_pytest_engine(sqlalchemy_pytest_database_url: str) -> AsyncEngine:
-    return create_async_engine(sqlalchemy_pytest_database_url)
+async def sqlalchemy_pytest_engine(sqlalchemy_pytest_database_url: str) -> AsyncEngine:
+    engine = create_async_engine(sqlalchemy_pytest_database_url)
+    yield engine
+    await engine.dispose()
 
 
 @pytest.fixture(scope="session")
