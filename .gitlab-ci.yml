@@ -23,6 +23,7 @@ stages:
       - "**/*.py"
       - pdm.lock
       - pyproject.toml
+      - .gitlab-ci.yml
 
   before_script:
     - pip install pdm
