@@ -4,10 +4,12 @@ from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from sqlalchemy import Connection, text
+from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker as AsyncSessionmaker  # noqa: N812
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from sqlalchemy_pytest._utils import get_op
 
 if TYPE_CHECKING:
     from alembic import config
@@ -39,37 +41,14 @@ async def _sqlalchemy_create_database(
     sqlalchemy_pytest_database_url: str,
     reuse_db: bool,  # noqa: FBT001
 ) -> AsyncIterable[None]:
-    database_name = sqlalchemy_pytest_database_url.rsplit("/")[-1]
     engine = create_async_engine(
         database_url,
         execution_options={"isolation_level": "AUTOCOMMIT"},
     )
-    async with engine.connect() as conn:
-        exists = await conn.scalar(
-            text(
-                f"SELECT 1 FROM pg_database WHERE datname='{database_name}'",  # noqa: S608
-            ),
-        )
-        if not exists:
-            await conn.execute(text(f'create database "{database_name}";'))
-
+    op = get_op(engine=engine, connection_url=sqlalchemy_pytest_database_url)
+    await op.create_db_if_not_exists()
     yield
-
-    async with engine.connect() as conn:
-        if reuse_db:
-            return
-
-        await conn.execute(
-            text(
-                f"""
-                select pg_terminate_backend(pg_stat_activity.pid)
-                from pg_stat_activity
-                where pg_stat_activity.datname = '{database_name}'
-                and pid <> pg_backend_pid();
-                """,  # noqa: S608
-            ),
-        )
-        await conn.execute(text(f'drop database "{database_name}";'))
+    await op.drop_db(reuse_db=reuse_db)
 
 
 @pytest.fixture(scope="session")
