@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import abc
 import pathlib
-from typing import Protocol
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -17,7 +17,7 @@ def get_op(engine: AsyncEngine, connection_url: str) -> Op:
             raise NotImplementedError
 
 
-class Op(Protocol):
+class Op(abc.ABC):
     _engine: AsyncEngine
     _connection_url: str
 
@@ -27,13 +27,13 @@ class Op(Protocol):
 
     @property
     def _db_name(self) -> str:
-        ...
+        raise NotImplementedError
 
     async def create_db_if_not_exists(self) -> None:
-        ...
+        raise NotImplementedError
 
     async def drop_db(self, *, reuse_db: bool) -> None:
-        ...
+        raise NotImplementedError
 
 
 class PostgresOp(Op):
