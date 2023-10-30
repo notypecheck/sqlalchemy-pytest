@@ -51,16 +51,9 @@ ruff:
   script:
     - pdm run ruff .
 
-pytest:
+
+.test-job: &test-job
   <<: *lint_job
-  variables:
-    POSTGRES_PASSWORD: password
-    POSTGRES_HOST_AUTH_METHOD: trust
-    TEST_DATABASE_URL: postgresql+asyncpg://postgres:password@postgres/postgres
-
-  services:
-    - postgres:14
-
   script:
     - pdm run coverage run
     - pdm run coverage report -m
@@ -71,3 +64,18 @@ pytest:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+
+test-postgresql:
+  <<: *test-job
+  variables:
+    POSTGRES_PASSWORD: password
+    POSTGRES_HOST_AUTH_METHOD: trust
+    TEST_DATABASE_URL: postgresql+asyncpg://postgres:password@postgres/postgres
+
+  services:
+    - postgres:14
+
+
+test-sqlite:
+  variables:
+    TEST_DATABASE_URL: sqlite+aiosqlite:///db.sqlite3
