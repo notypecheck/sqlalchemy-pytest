@@ -94,8 +94,6 @@ publish:
   when: manual
 #  only:
 #    - tags
-  except:
-    - branches
   script:
     - >
       pdm publish
