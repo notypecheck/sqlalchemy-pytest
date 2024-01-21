@@ -100,4 +100,4 @@ publish:
     - >
       pdm publish
       --password ${PYPI_PASSWORD}
-      --username ${PYPI_USERNAME
+      --username ${PYPI_USERNAME}
