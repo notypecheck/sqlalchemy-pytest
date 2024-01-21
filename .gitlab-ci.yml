@@ -91,6 +91,7 @@ test-sqlite:
 publish:
   <<: *lint_job
   stage: publish
+  when: manual
   only:
     - tags
   except:
