@@ -92,8 +92,8 @@ publish:
   <<: *lint_job
   stage: publish
   when: manual
-  only:
-    - tags
+#  only:
+#    - tags
   except:
     - branches
   script:
