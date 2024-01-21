@@ -4,7 +4,8 @@ from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from sqlalchemy import Connection
+import sqlalchemy
+from sqlalchemy import Connection, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker as AsyncSessionmaker  # noqa: N812
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -31,14 +32,15 @@ def reuse_db(request: pytest.FixtureRequest) -> bool:
 
 
 @pytest.fixture(scope="session")
-def sqlalchemy_pytest_database_url(database_url: str, worker_id: str) -> str:
-    return f"{database_url}-{worker_id}"
+def sqlalchemy_pytest_database_url(database_url: str, worker_id: str) -> sqlalchemy.URL:
+    url = make_url(database_url)
+    return url.set(database=f"{url.database}-{worker_id}")
 
 
 @pytest.fixture(scope="session")
 async def _sqlalchemy_create_database(
     database_url: str,
-    sqlalchemy_pytest_database_url: str,
+    sqlalchemy_pytest_database_url: sqlalchemy.URL,
     reuse_db: bool,  # noqa: FBT001
 ) -> AsyncIterable[None]:
     engine = create_async_engine(
@@ -53,7 +55,7 @@ async def _sqlalchemy_create_database(
 
 @pytest.fixture(scope="session")
 async def sqlalchemy_pytest_engine(
-    sqlalchemy_pytest_database_url: str,
+    sqlalchemy_pytest_database_url: sqlalchemy.URL,
 ) -> AsyncIterator[AsyncEngine]:
     engine = create_async_engine(sqlalchemy_pytest_database_url)
     yield engine

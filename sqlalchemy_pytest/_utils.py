@@ -3,11 +3,12 @@ from __future__ import annotations
 import abc
 import pathlib
 
+import sqlalchemy
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 
-def get_op(engine: AsyncEngine, connection_url: str) -> Op:
+def get_op(engine: AsyncEngine, connection_url: sqlalchemy.URL) -> Op:
     match engine.dialect.name:
         case "postgresql":
             return PostgresOp(engine, connection_url)
@@ -18,29 +19,28 @@ def get_op(engine: AsyncEngine, connection_url: str) -> Op:
 
 
 class Op(abc.ABC):
-    _engine: AsyncEngine
-    _connection_url: str
-
-    def __init__(self, engine: AsyncEngine, connection_url: str) -> None:
+    def __init__(self, engine: AsyncEngine, connection_url: sqlalchemy.URL) -> None:
         self._engine = engine
         self._connection_url = connection_url
 
     @property
     def _db_name(self) -> str:
-        raise NotImplementedError
+        if not self._connection_url.database:
+            msg = "Connection URL should have a database"
+            raise ValueError(msg)
 
+        return self._connection_url.database
+
+    @abc.abstractmethod
     async def create_db_if_not_exists(self) -> None:
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def drop_db(self, *, reuse_db: bool) -> None:
         raise NotImplementedError
 
 
 class PostgresOp(Op):
-    @property
-    def _db_name(self) -> str:
-        return self._connection_url.rsplit("/")[-1]
-
     async def create_db_if_not_exists(self) -> None:
         async with self._engine.connect() as conn:
             exists = await conn.scalar(
@@ -69,10 +69,6 @@ class PostgresOp(Op):
 
 
 class SqliteOp(Op):
-    @property
-    def _db_name(self) -> str:
-        return self._connection_url.split("://")[-1]
-
     async def create_db_if_not_exists(self) -> None:
         if pathlib.Path(self._db_name).exists():
             return
