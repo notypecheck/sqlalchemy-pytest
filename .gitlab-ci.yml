@@ -1,10 +1,15 @@
 image: docker
 
+
+variables:
+  IMAGE_PYTHON: python:3.10-slim
+
 stages:
   - lint
+  - publish
 
 .lint-job: &lint_job
-  image: python:3.10-slim
+  image: $IMAGE_PYTHON
   stage: lint
   interruptible: true
   cache:
@@ -81,3 +86,17 @@ test-sqlite:
   <<: *test-job
   variables:
     TEST_DATABASE_URL: sqlite+aiosqlite:///db.sqlite3
+
+
+publish:
+  <<: *lint_job
+  stage: publish
+  only:
+    - tags
+  except:
+    - branches
+  script:
+    - >
+      pdm publish
+      --password ${PYPI_PASSWORD}
+      --username ${PYPI_USERNAME
