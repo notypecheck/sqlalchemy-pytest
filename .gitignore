@@ -6,3 +6,5 @@ coverage.xml
 
 .env
 dist
+
+db.sqlite3
