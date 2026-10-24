@@ -1,0 +1,24 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  publish:
+    name: Build & publish to PyPI
+    runs-on: ubuntu-latest
+    environment: deploy
+    permissions:
+      id-token: write
+    steps:
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.14"
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        run: uv publish
