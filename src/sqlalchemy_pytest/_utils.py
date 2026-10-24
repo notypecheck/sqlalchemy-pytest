@@ -70,7 +70,7 @@ class PostgresOp(Op):
 
 class SqliteOp(Op):
     async def create_db_if_not_exists(self) -> None:
-        if pathlib.Path(self._db_name).exists():
+        if pathlib.Path(self._db_name).exists():  # noqa: ASYNC240
             return
 
         async with self._engine.connect():
@@ -79,4 +79,4 @@ class SqliteOp(Op):
     async def drop_db(self, *, reuse_db: bool) -> None:
         if reuse_db:
             return
-        pathlib.Path(self._db_name).unlink(missing_ok=True)
+        pathlib.Path(self._db_name).unlink(missing_ok=True)  # noqa: ASYNC240

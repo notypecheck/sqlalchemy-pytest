@@ -28,7 +28,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture(scope="session")
 def reuse_db(request: pytest.FixtureRequest) -> bool:
-    return cast(bool, request.config.getvalue("reuse_db"))
+    return cast("bool", request.config.getvalue("reuse_db"))
 
 
 @pytest.fixture(scope="session")
@@ -51,6 +51,7 @@ async def _sqlalchemy_create_database(
     await op.create_db_if_not_exists()
     yield
     await op.drop_db(reuse_db=reuse_db)
+    await engine.dispose()
 
 
 @pytest.fixture(scope="session")
@@ -64,7 +65,7 @@ async def sqlalchemy_pytest_engine(
 
 @pytest.fixture(scope="session")
 def alembic_config() -> config.Config | None:
-    from alembic import config
+    from alembic import config  # noqa: PLC0415
 
     return config.Config("alembic.ini")
 
@@ -76,7 +77,7 @@ async def _sqlalchemy_run_migrations(
     alembic_config: config.Config | None,
     database_url: str,
 ) -> None:
-    from alembic import command
+    from alembic import command  # noqa: PLC0415
 
     if alembic_config is None:
         return

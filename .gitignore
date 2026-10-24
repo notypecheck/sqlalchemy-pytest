@@ -3,7 +3,6 @@ __pycache__
 
 .coverage
 coverage.xml
-.pdm-python
 
 .env
 dist
