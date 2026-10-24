@@ -54,8 +54,7 @@ jobs:
         backend: [sqlite, postgres]
     services:
       postgres:
-        if: ${{ matrix.backend == 'postgres' }}
-        image: postgres:14
+        image: ${{ matrix.backend == 'postgres' && 'postgres:16' || '' }}
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_HOST_AUTH_METHOD: trust
